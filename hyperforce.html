@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HyperForce">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0b0b0b">
+    <meta name="description" content="4-недельный мезоцикл: гипертрофия + сила + кондиция">
+    <title>HyperForce</title>
+
+    <!-- Иконка для iPhone (генерируется через Canvas) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,
+    <svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'>
+        <rect width='180' height='180' rx='36' fill='%230b0b0b'/>
+        <text x='90' y='115' font-family='Arial Black,sans-serif' font-size='100' font-weight='900' fill='%23c9a24d' text-anchor='middle'>H</text>
+    </svg>">
+
+    <style>
+        :root {
+            --bg: #0b0b0b;
+            --surface: #181818;
+            --border: #2a2a2a;
+            --text: #e0e0e0;
+            --text-secondary: #9a9a9a;
+            --accent: #c9a24d;
+            --accent-glow: rgba(201, 162, 77, 0.25);
+            --green: #4caf84;
+            --red: #e0556a;
+            --orange: #d68f4e;
+            --blue: #5a9fd4;
+            --radius: 14px;
+            --radius-sm: 10px;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 12px);
+            --safe-left: env(safe-area-inset-left, 12px);
+            --safe-right: env(safe-area-inset-right, 12px);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        html {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+            -webkit-font-smoothing: antialiased;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 8px 4px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 6px;
+            padding-top: 4px;
+        }
+        .header .logo {
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #1a1a1a;
+            font-weight: 900;
+        }
+        .header .subtitle {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.6px;
+            margin-top: 2px;
+            text-transform: uppercase;
+        }
+        .week-swiper {
+            display: flex;
+            gap: 5px;
+            margin: 10px 0;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 4px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+        }
+        .week-swiper::-webkit-scrollbar {
+            display: none;
+        }
+        .week-btn {
+            flex: 1 0 auto;
+            min-width: 68px;
+            padding: 12px 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+            font-family: inherit;
+            text-align: center;
+            line-height: 1.2;
+            scroll-snap-align: center;
+        }
+        .week-btn small {
+            display: block;
+            font-weight: 400;
+            font-size: 0.6rem;
+            opacity: 0.7;
+            margin-top: 1px;
+        }
+        .week-btn.active {
+            background: var(--accent);
+            color: #1a1a1a;
+            box-shadow: 0 4px 18px var(--accent-glow);
+            transform: scale(1.03);
+        }
+        .week-btn:active {
+            transform: scale(0.95);
+        }
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+        }
+        .chip .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+        }
+        .dot-g {
+            background: var(--green);
+        }
+        .dot-o {
+            background: var(--orange);
+        }
+        .dot-r {
+            background: var(--red);
+        }
+        .dot-b {
+            background: var(--blue);
+        }
+        .chip.accent {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(201, 162, 77, 0.08);
+        }
+        .chip.emom {
+            border-color: #5a9fd4;
+            color: #5a9fd4;
+            background: rgba(90, 159, 212, 0.08);
+        }
+        .chip.hiit {
+            border-color: #e0556a;
+            color: #e0556a;
+            background: rgba(224, 85, 106, 0.08);
+        }
+        .day-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 7px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .day-card:active {
+            border-color: #3a3a3a;
+        }
+        .day-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 14px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.01);
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.15s;
+        }
+        .day-head:active {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .day-head-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .day-icon-sm {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .ic-gym {
+            background: rgba(201, 162, 77, 0.15);
+            color: var(--accent);
+        }
+        .ic-emom {
+            background: rgba(90, 159, 212, 0.15);
+            color: #7bb3dd;
+        }
+        .ic-hiit {
+            background: rgba(224, 85, 106, 0.15);
+            color: #e07282;
+        }
+        .ic-cardio {
+            background: rgba(76, 175, 132, 0.15);
+            color: var(--green);
+        }
+        .ic-rest {
+            background: rgba(127, 140, 141, 0.15);
+            color: #95a5a6;
+        }
+        .day-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #f2f2f2;
+        }
+        .day-sub {
+            font-size: 0.66rem;
+            color: var(--text-secondary);
+        }
+        .day-arrow {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            transition: transform 0.25s;
+        }
+        .day-card.open .day-arrow {
+            transform: rotate(180deg);
+        }
+        .day-body {
+            display: none;
+            padding: 0 12px 12px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .day-card.open .day-body {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.73rem;
+            min-width: 540px;
+        }
+        th {
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.62rem;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            padding: 8px 4px 8px 0;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        td {
+            padding: 9px 4px 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            vertical-align: middle;
+            color: #d0d0d0;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .ex-name {
+            font-weight: 500;
+            color: #f2f2f2;
+            white-space: nowrap;
+        }
+        .ex-accent {
+            color: var(--accent) !important;
+            font-weight: 700 !important;
+        }
+        .rir {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 10px;
+            letter-spacing: 0.3px;
+            min-width: 26px;
+            text-align: center;
+        }
+        .rir0 {
+            background: rgba(192, 57, 43, 0.22);
+            color: #e0556a;
+        }
+        .rir1 {
+            background: rgba(211, 84, 0, 0.2);
+            color: #d68f4e;
+        }
+        .rir2 {
+            background: rgba(108, 142, 191, 0.2);
+            color: #7aadd6;
+        }
+        .rir3 {
+            background: rgba(76, 175, 132, 0.2);
+            color: #5daa7a;
+        }
+        .rir4 {
+            background: rgba(127, 140, 141, 0.2);
+            color: #95a5a6;
+        }
+        .note {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            max-width: 140px;
+            white-space: normal;
+            line-height: 1.4;
+        }
+        .info-box {
+            padding: 10px 0;
+            font-size: 0.78rem;
+            color: #ccc;
+            line-height: 1.7;
+        }
+        .info-box strong {
+            color: #7bb3dd;
+        }
+        .info-box.hiit-box strong {
+            color: #e07282;
+        }
+        .legend {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.64rem;
+            color: var(--text-secondary);
+            align-items: center;
+        }
+        .legend .rir {
+            margin-right: 2px;
+        }
+        @media (max-width: 380px) {
+            .week-btn {
+                min-width: 58px;
+                padding: 10px 5px;
+                font-size: 0.65rem;
+            }
+            .day-head {
+                padding: 12px 10px;
+            }
+            .day-body {
+                padding: 0 8px 8px;
+            }
+            th,
+            td {
+                padding: 7px 3px 7px 0;
+                font-size: 0.68rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><div class="logo-icon">H</div>HyperForce</div>
+            <p class="subtitle">Гипертрофия • Сила • Кондиция</p>
+        </div>
+
+        <div class="week-swiper" id="weekSwiper">
+            <button class="week-btn active" data-week="1">Нед 1<small>Вводная</small></button>
+            <button class="week-btn" data-week="2">Нед 2<small>Развитие</small></button>
+            <button class="week-btn" data-week="3">Нед 3<small>Ударная</small></button>
+            <button class="week-btn" data-week="4">Нед 4<small>Разгрузка</small></button>
+        </div>
+
+        <div id="weekContent"></div>
+
+        <div class="legend">
+            <span><span class="rir rir0">0</span> Отказ</span>
+            <span><span class="rir rir1">1</span> 1 запас</span>
+            <span><span class="rir rir2">2</span> 2</span>
+            <span><span class="rir rir3">3</span> 3</span>
+            <span><span class="rir rir4">4</span> 4</span>
+            <span style="margin-left:auto;">👣 ≥10K • 😴 8–9ч</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Данные программы
+            const program = {
+                1: {
+                    title: 'Неделя 1 · Вводная',
+                    chips: [
+                        { cls: 'dot-g', text: 'Вводная' },
+                        { cls: 'accent', text: 'RIR 1–2' },
+                        { cls: '', text: 'Гипертрофия 70–75%' },
+                        { cls: 'emom', text: 'EMOM ВТ' },
+                        { cls: 'hiit', text: 'HIIT СБ' }
+                    ],
+                    days: [
+                        { icon: 'ic-gym', day: 'ПН', title: 'Грудь + Бицепс', sub: 'Гипертрофия • 5 упр.', type: 'table', rows: [
+                                ['1', 'Жим гантелей наклон 30°', '3×8–10', 'rir2', '2', '72.5%',
+                                    'Контроль негатива'
+                                ],
+                                ['2', 'Жим в Смите гориз.', '3×8–10', 'rir2', '2', '75%', 'Протракция плеч'],
+                                ['3', 'Сведение в «Бабочке»', '3×12–15', 'rir0', '0', '—', 'Задержка 1 сек'],
+                                ['4', 'Подъем EZ-штанги на бицепс', '3×6–8', 'rir2', '2', '75%',
+                                'Без читинга'],
+                                ['5', 'Сгибания с гантелями на накл.', '3×10–12', 'rir1', '1', '67.5%',
+                                    'Супинация внизу']
+                            ] },
+                        { icon: 'ic-emom', day: 'ВТ', title: 'EMOM', sub: 'Силовая выносливость • 10 мин',
+                            type: 'info', text: '<strong>10 минут</strong> · Каждую минуту:<br>1. Махи гири ×10<br>2. Бёрпи без отжиманий ×8<br>3. Планка на локтях 20 сек<br><br>Остаток минуты — отдых.' },
+                        { icon: 'ic-gym', day: 'СР', title: 'Ноги + Плечи', sub: 'Гипертрофия • 6 упр.',
+                            type: 'table', rows: [
+                                ['1', 'Приседания в Гакк-машине', '4×8–12', 'rir2', '2', '72.5%',
+                                    'Стопы узко/низко'
+                                ],
+                                ['2', 'Приседания в Смите (стопы вперёд)', '3×10–12', 'rir2', '2', '70%',
+                                    'Таз строго вниз'],
+                                ['3', 'Выпады с гантелями обратные', '3×10–12/нога', 'rir1', '1',
+                                    '30–40% от приседа', 'Равновесие'],
+                                ['4', 'Разгибания ног', '3×12–15', 'rir0', '0', '—', 'Задержка 2 сек'],
+                                ['5', 'Жим гантелей сидя', '3×8–10', 'rir2', '2', '72.5%',
+                                'Без удара вверху'],
+                                ['6', 'Махи гантелями в стороны', '3×12–15', 'rir0', '0', '—',
+                                    'Частичные повт.']
+                            ] },
+                        { icon: 'ic-cardio', day: 'ЧТ', title: 'LISS Вело', sub: 'Восстановление • 30 мин',
+                            type: 'info',
+                            text: '🚴 Велотренажёр 30 мин · ЧСС 110–125 · Шаги до 10 000' },
+                        { icon: 'ic-gym', day: 'ПТ', title: 'Спина + Силовой жим (ME)',
+                            sub: 'Тяга + Максимальное усилие • 7 упр.', type: 'table', rows: [
+                                ['1', 'Подтягивания широким хватом', '3×6–10', 'rir2', '2',
+                                    '10–12% веса тела', 'Без веса → 3×МАХ'],
+                                ['2', 'Тяга гантели в наклоне', '3×8–10', 'rir2', '2', '75%',
+                                    'Локоть к корпусу'],
+                                ['3', 'Тяга гориз. блока узким', '3×10–12', 'rir1', '1', '70%',
+                                    'Сведение лопаток'],
+                                ['4', 'Разведения на заднюю дельту', '3×15', 'rir0', '0', '—', 'Пампинг'],
+                                ['5', 'Жим лёжа (ME) — ОСНОВНОЙ', '5×3', 'rir2', '1–2', '87.5%',
+                                    '⭐ Темп 2-1-X-0, отдых 3–4 мин', 'ex-accent'],
+                                ['6', 'Жим узким хватом', '3×5', 'rir1', '1', '80%', 'Подсобка трицепс'],
+                                ['7', 'Молотки с гантелями', '2×12', 'rir0', '0', 'лёгкий', 'Мягкий отказ']
+                            ] },
+                        { icon: 'ic-hiit', day: 'СБ', title: 'HIIT', sub: 'Анаэробная мощность • 8 раундов',
+                            type: 'info',
+                            text: '<strong>20 сек работа / 40 сек отдых × 8</strong><br>Спринт (вело/дорожка) или бёрпи.<br>RPE 9–10 в рабочих интервалах.' },
+                        { icon: 'ic-rest', day: 'ВС', title: 'Полный отдых', sub: 'Сон 8–9 ч • Шаги ≤5000',
+                            type: 'info', text: '😴 Восстановление ЦНС. Никаких тренировок.' }
+                    ]
+                },
+                2: {
+                    title: 'Неделя 2 · Развивающая',
+                    chips: [
+                        { cls: 'dot-o', text: 'Развитие' },
+                        { cls: 'accent', text: 'RIR 0–1' },
+                        { cls: '', text: 'Гипертрофия 75–80%' },
+                        { cls: 'emom', text: 'EMOM ВТ' },
+                        { cls: 'hiit', text: 'HIIT СБ' }
+                    ],
+                    days: [
+                        { icon: 'ic-gym', day: 'ПН', title: 'Грудь + Бицепс', sub: 'Гипертрофия • +1 сет',
+                            type: 'table', rows: [
+                                ['1', 'Жим гантелей наклон 30°', '4×8–10', 'rir1', '1', '77.5%',
+                                    '+1 сет, +5%'],
+                                ['2', 'Жим в Смите гориз.', '3×8–10', 'rir1', '1', '77.5%', '+2.5%'],
+                                ['3', 'Сведение в «Бабочке»', '3×12–15', 'rir0', '0', '—', 'Задержка 2 сек'],
+                                ['4', 'Подъем EZ-штанги', '3×6–8', 'rir1', '1', '77.5%', '+2.5%'],
+                                ['5', 'Сгибания с гантелями', '3×10–12', 'rir0', '0', '70%', 'RIR→0']
+                            ] },
+                        { icon: 'ic-emom', day: 'ВТ', title: 'EMOM', sub: 'Силовая выносливость • 12 мин',
+                            type: 'info',
+                            text: '<strong>12 минут</strong> · Каждую минуту:<br>1. Трастеры с гантелями ×10<br>2. Прыжки на тумбу ×8<br>3. Скручивания на пресс ×12' },
+                        { icon: 'ic-gym', day: 'СР', title: 'Ноги + Плечи', sub: 'Гипертрофия • 6 упр.',
+                            type: 'table', rows: [
+                                ['1', 'Приседания в Гакк-машине', '5×8–12', 'rir1', '1', '75%',
+                                    '5-й сет RIR 0'],
+                                ['2', 'Приседания в Смите', '3×10–12', 'rir1', '1', '72.5%', '+2.5%'],
+                                ['3', 'Выпады', '3×10–12/нога', 'rir0', '0', '+2.5 кг',
+                                'Без потери формы'],
+                                ['4', 'Разгибания ног', '3×12–15', 'rir0', '0', '—', 'Дроп-сет в конце'],
+                                ['5', 'Жим гантелей сидя', '3×8–10', 'rir1', '1', '75%', '+2.5%'],
+                                ['6', 'Махи гантелями', '3×12–15', 'rir0', '0', '—', '+1.25–2.5 кг']
+                            ] },
+                        { icon: 'ic-cardio', day: 'ЧТ', title: 'LISS Вело', sub: 'Восстановление • 30 мин',
+                            type: 'info', text: '🚴 Велотренажёр 30 мин · ЧСС 110–125' },
+                        { icon: 'ic-gym', day: 'ПТ', title: 'Спина + Силовой жим (RM)',
+                            sub: 'Тяга + Повторный максимум • 7 упр.', type: 'table', rows: [
+                                ['1', 'Подтягивания', '4×6–10', 'rir1', '1', '15% веса тела', '+1 сет'],
+                                ['2', 'Тяга гантели в наклоне', '3×8–10', 'rir1', '1', '77.5%', '+2.5%'],
+                                ['3', 'Тяга гориз. блока', '3×10–12', 'rir0', '0', '72.5%', 'RIR→0'],
+                                ['4', 'Разведения на зад. дельту', '3×15', 'rir0', '0', '—', '+1.25 кг'],
+                                ['5', 'Жим лёжа (RM) — ОСНОВНОЙ', '4×5', 'rir1', '0–1', '82.5%',
+                                    '⭐ Темп 2-0-X-0, отдых 3 мин', 'ex-accent'],
+                                ['6', 'Жим гантелей наклон (лёгкий)', '3×8', 'rir1', '1', '65%', 'Подсобка'],
+                                ['7', 'Молотки', '2×12', 'rir0', '0', 'лёгкий', '']
+                            ] },
+                        { icon: 'ic-hiit', day: 'СБ', title: 'HIIT', sub: 'Анаэробная мощность • 6 раундов',
+                            type: 'info',
+                            text: '<strong>30 сек работа / 30 сек отдых × 6</strong><br>Махи гири, прыжки, скакалка.' },
+                        { icon: 'ic-rest', day: 'ВС', title: 'Полный отдых', sub: 'Сон 8–9 ч', type: 'info',
+                            text: '😴 Восстановление ЦНС.' }
+                    ]
+                },
+                3: {
+                    title: 'Неделя 3 · Ударная',
+                    chips: [
+                        { cls: 'dot-r', text: 'Ударная' },
+                        { cls: 'accent', text: 'RIR 0 (отказ)' },
+                        { cls: '', text: 'Гипертрофия 80–85%' },
+                        { cls: 'emom', text: 'EMOM ВТ' },
+                        { cls: 'hiit', text: 'Табата СБ' }
+                    ],
+                    days: [
+                        { icon: 'ic-gym', day: 'ПН', title: 'Грудь + Бицепс', sub: 'Отказы • дроп-сеты',
+                            type: 'table', rows: [
+                                ['1', 'Жим гантелей наклон', '4×6–8', 'rir0', '0', '82.5%', 'Отдых-пауза'],
+                                ['2', 'Жим в Смите', '3×6–8', 'rir0', '0', '82.5%', 'Негатив 3 сек'],
+                                ['3', 'Сведение в «Бабочке»', '3×12–15', 'rir0', '0', '—',
+                                'Тройной дроп-сет'],
+                                ['4', 'Подъем EZ-штанги', '3×6–8', 'rir0', '0', '80%',
+                                '→ Суперсет молотки'],
+                                ['5', 'Сгибания с гантелями', '3×10–12', 'rir0', '0', '72.5%',
+                                    'Частичные повт.']
+                            ] },
+                        { icon: 'ic-emom', day: 'ВТ', title: 'EMOM', sub: 'Силовая выносливость • 15 мин',
+                            type: 'info',
+                            text: '<strong>15 минут</strong> · Каждую минуту:<br>1. Рывок гири ×8/рука (смена каждую мин)<br>2. Воздушные приседания ×15<br>3. Боковая планка 15 сек' },
+                        { icon: 'ic-gym', day: 'СР', title: 'Ноги + Плечи', sub: 'Отказы • статика • 21s',
+                            type: 'table', rows: [
+                                ['1', 'Приседания в Гакк-машине', '5×6–10', 'rir0', '0', '82.5%',
+                                    'Статика 10 сек'],
+                                ['2', 'Приседания в Смите', '3×8–10', 'rir0', '0', '77.5%',
+                                'Негатив 4 сек'],
+                                ['3', 'Выпады', '3×10–12', 'rir0', '0', '+5 кг', 'Без пауз'],
+                                ['4', 'Разгибания ног', '3×12–15', 'rir0', '0', '—',
+                                    'Дроп-сет + частичные'],
+                                ['5', 'Жим гантелей сидя', '3×6–8', 'rir0', '0', '80%', 'Отдых-пауза'],
+                                ['6', 'Махи гантелями', '3×12–15', 'rir0', '0', '—', '21s']
+                            ] },
+                        { icon: 'ic-cardio', day: 'ЧТ', title: 'LISS Вело', sub: 'Восстановление • 30 мин',
+                            type: 'info', text: '🚴 Велотренажёр 30 мин · ЧСС 110–125' },
+                        { icon: 'ic-gym', day: 'ПТ', title: 'Спина + Силовой жим (DE)',
+                            sub: 'Тяга + Динамическое усилие • 7 упр.', type: 'table', rows: [
+                                ['1', 'Подтягивания', '4×6–8', 'rir0', '0', '20% веса тела',
+                                'Негативы ×3'],
+                                ['2', 'Тяга гантели в наклоне', '3×6–8', 'rir0', '0', '82.5%',
+                                    'Негатив 3 сек'],
+                                ['3', 'Тяга гориз. блока', '3×10–12', 'rir0', '0', '75%', 'Дроп-сет'],
+                                ['4', 'Разведения на зад. дельту', '3×15', 'rir0', '0', '—',
+                                'Удержание 2 сек'],
+                                ['5', 'Жим лёжа (DE) — ОСНОВНОЙ', '8×3', 'rir2', '2 (скор.)',
+                                    '60% + резина', '⭐ Скорость! Отдых 45–60 сек', 'ex-accent'],
+                                ['6', 'Отжимания на брусьях с весом', '3×6–8', 'rir0', '0', 'отягощение',
+                                    'Подсобка'],
+                                ['7', 'Молотки', '2×12', 'rir0', '0', 'лёгкий', '']
+                            ] },
+                        { icon: 'ic-hiit', day: 'СБ', title: 'HIIT Табата', sub: 'Пиковая мощность',
+                            type: 'info',
+                            text: '<strong>20 сек работа / 10 сек отдых × 8</strong><br>Бёрпи, трастеры, спринт.' },
+                        { icon: 'ic-rest', day: 'ВС', title: 'Полный отдых', sub: 'Сон 8–9 ч', type: 'info',
+                            text: '😴 Глубокое восстановление.' }
+                    ]
+                },
+                4: {
+                    title: 'Неделя 4 · Разгрузка',
+                    chips: [
+                        { cls: 'dot-b', text: 'Разгрузка' },
+                        { cls: 'accent', text: 'RIR 3–4' },
+                        { cls: '', text: 'Вес Нед.3, объём –30–40%' },
+                        { cls: 'emom', text: 'EMOM лайт' },
+                        { cls: 'hiit', text: 'HIIT лайт' }
+                    ],
+                    days: [
+                        { icon: 'ic-gym', day: 'ПН', title: 'Грудь + Бицепс (лёгкая)', sub: 'Разгрузка',
+                            type: 'table', rows: [
+                                ['1', 'Жим гантелей наклон', '2×8', 'rir4', '4', '82.5%', ''],
+                                ['2', 'Жим в Смите', '2×8', 'rir4', '4', '82.5%', ''],
+                                ['3', 'Сведение в «Бабочке»', '2×12', 'rir3', '3', '—', ''],
+                                ['4', 'Подъем EZ-штанги', '2×8', 'rir3', '3', '80%', '']
+                            ] },
+                        { icon: 'ic-emom', day: 'ВТ', title: 'EMOM лайт', sub: '8 мин', type: 'info',
+                            text: '<strong>8 минут</strong> · Махи гири ×8 + планка 15 сек' },
+                        { icon: 'ic-gym', day: 'СР', title: 'Ноги + Плечи (лёгкая)', sub: 'Разгрузка',
+                            type: 'table', rows: [
+                                ['1', 'Приседания в Гакк-машине', '3×8', 'rir3', '3', '82.5%', ''],
+                                ['2', 'Разгибания ног', '2×15', 'rir3', '3', '—', ''],
+                                ['3', 'Жим гантелей сидя', '2×8', 'rir3', '3', '80%', ''],
+                                ['4', 'Махи гантелями', '2×15', 'rir3', '3', '—', '']
+                            ] },
+                        { icon: 'ic-cardio', day: 'ЧТ', title: 'LISS Вело', sub: '30 мин', type: 'info',
+                            text: '🚴 Велотренажёр 30 мин · ЧСС 110–125' },
+                        { icon: 'ic-gym', day: 'ПТ', title: 'Спина + Тест жима', sub: 'Тест 1ПМ',
+                            type: 'table', rows: [
+                                ['1', 'Подтягивания', '2×6', 'rir4', '4', '20% веса тела', ''],
+                                ['2', 'Тяга гантели в наклоне', '2×8', 'rir3', '3', '82.5%', ''],
+                                ['3', 'Разведения на зад. дельту', '2×15', 'rir3', '3', '—', ''],
+                                ['4', 'Жим лёжа — ТЕСТ 1ПМ', 'разминка → 1×1', 'rir0', '0', '100%+',
+                                    '⭐ НОВЫЙ МАКСИМУМ', 'ex-accent'],
+                                ['5', 'Молотки', '2×12', 'rir3', '3', 'лёгкий', '']
+                            ] },
+                        { icon: 'ic-hiit', day: 'СБ', title: 'HIIT лайт', sub: '6 раундов', type: 'info',
+                            text: '<strong>15 сек работа / 45 сек отдых × 6</strong><br>Вело или гребля.' },
+                        { icon: 'ic-rest', day: 'ВС', title: 'Полный отдых', sub: 'Суперкомпенсация',
+                            type: 'info', text: '😴 Сон 9 ч. Замер пульса покоя.' }
+                    ]
+                }
+            };
+
+            const weekContent = document.getElementById('weekContent');
+            const weekSwiper = document.getElementById('weekSwiper');
+            const weekBtns = weekSwiper.querySelectorAll('.week-btn');
+
+            function renderWeek(weekNum) {
+                const data = program[weekNum];
+                let chipsHTML = data.chips.map(c =>
+                    `<span class="chip${c.cls ? ' ' + c.cls : ''}">${c.cls.startsWith('dot') ? '<span class="dot ' + c.cls + '"></span>' : ''}${c.text}</span>`
+                ).join('');
+
+                let daysHTML = data.days.map(d => {
+                    let bodyHTML = '';
+                    if (d.type === 'table') {
+                        bodyHTML = `<table><thead><tr><th>№</th><th>Упражнение</th><th>Сеты×Повт</th><th>RIR</th><th>%1ПМ</th><th>Прим.</th></tr></thead><tbody>`;
+                        d.rows.forEach(r => {
+                            const accentClass = r[8] === 'ex-accent' ? ' ex-accent' : '';
+                            bodyHTML +=
+                                `<tr><td>${r[0]}</td><td class="ex-name${accentClass}">${r[1]}</td><td>${r[2]}</td><td><span class="rir ${r[3]}">${r[4]}</span></td><td>${r[5]}</td><td class="note">${r[6] || ''}</td></tr>`;
+                        });
+                        bodyHTML += `</tbody></table>`;
+                    } else {
+                        const boxClass = d.icon === 'ic-hiit' ? ' hiit-box' : '';
+                        bodyHTML = `<div class="info-box${boxClass}">${d.text}</div>`;
+                    }
+                    return `<div class="day-card open"><div class="day-head" onclick="this.parentElement.classList.toggle('open')"><div class="day-head-left"><div class="day-icon-sm ${d.icon}">${d.day}</div><div><div class="day-title">${d.title}</div><div class="day-sub">${d.sub}</div></div></div><span class="day-arrow">▼</span></div><div class="day-body">${bodyHTML}</div></div>`;
+                }).join('');
+
+                weekContent.innerHTML = `
+                    <div class="chip-row">${chipsHTML}</div>
+                    ${daysHTML}
+                `;
+            }
+
+            function setActiveWeek(weekNum) {
+                weekBtns.forEach(b => b.classList.remove('active'));
+                const activeBtn = weekSwiper.querySelector(`[data-week="${weekNum}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                    activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+                renderWeek(weekNum);
+            }
+
+            weekSwiper.addEventListener('click', function(e) {
+                const btn = e.target.closest('.week-btn');
+                if (!btn) return;
+                setActiveWeek(btn.getAttribute('data-week'));
+            });
+
+            // Свайп на неделях
+            let touchStartX = 0;
+            weekContent.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            weekContent.addEventListener('touchend', function(e) {
+                const diff = touchStartX - e.changedTouches[0].screenX;
+                if (Math.abs(diff) < 50) return;
+                const active = weekSwiper.querySelector('.week-btn.active');
+                if (!active) return;
+                const cur = parseInt(active.getAttribute('data-week'));
+                let next = cur;
+                if (diff > 0 && cur < 4) next = cur + 1;
+                if (diff < 0 && cur > 1) next = cur - 1;
+                if (next !== cur) setActiveWeek(next);
+            });
+
+            // Старт
+            renderWeek(1);
+        })();
+    </script>
+</body>
+</html>
